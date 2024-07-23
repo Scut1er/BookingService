@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str
     TOKEN_EXPIRE_TIME_MINUTES: int
+    REDIS_HOST: str
+    REDIS_PORT: int
 
     @property
     def DATABASE_URL(self):
