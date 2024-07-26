@@ -1,8 +1,7 @@
 from datetime import date
 
-from sqlalchemy import select, and_, or_, func
+from sqlalchemy import select, func
 
-from app.bookings.models import Bookings
 from app.dao.base import BaseDAO
 from app.database import async_session_maker
 from app.hotels.models import Hotels
@@ -25,7 +24,8 @@ class HotelDAO(BaseDAO):
                 Hotels.services.label('services'),
                 Hotels.rooms_quantity.label('rooms_quantity'),
                 Hotels.image_id.label('image_id'),
-                (Hotels.rooms_quantity - func.coalesce(func.sum(booked_rooms_subquery.c.booked_rooms), 0)).label('rooms_left')
+                (Hotels.rooms_quantity - func.coalesce(func.sum(booked_rooms_subquery.c.booked_rooms), 0)).label(
+                    'rooms_left')
             )
             .select_from(Hotels)
             .join(Rooms, Rooms.hotel_id == Hotels.id)
@@ -43,4 +43,3 @@ class HotelDAO(BaseDAO):
         async with async_session_maker() as session:
             result = await session.execute(query)
             return result.mappings().all()
-

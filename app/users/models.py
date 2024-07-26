@@ -1,4 +1,3 @@
-
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -11,3 +10,7 @@ class Users(Base):
     email: Mapped[str]
     hashed_password: Mapped[str]
 
+    bookings: Mapped[list["Bookings"]] = relationship("Bookings", back_populates="user")
+
+    def __str__(self):
+        return f"User: {self.email}"

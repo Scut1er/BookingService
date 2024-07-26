@@ -15,6 +15,12 @@ class SBooking(BaseModel):
     total_days: int
 
 
+class SNewBooking(BaseModel):
+    room_id: int
+    date_from: date
+    date_to: date
+
+
 class SGetBooking(BaseModel):
     id: int
     room_id: int
