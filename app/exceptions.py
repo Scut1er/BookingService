@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import HTTPException, status
 
 
-class BookingException(HTTPException):
+class BaseException(HTTPException):
     status_code = 500
     detail = ""
 
@@ -11,64 +11,75 @@ class BookingException(HTTPException):
         super().__init__(status_code=self.status_code, detail=self.detail or self.detail)
 
 
-class UserAlreadyExists(BookingException):
+class UserAlreadyExists(BaseException):
     status_code = status.HTTP_409_CONFLICT
     detail = "User already exists"
 
 
-class IncorrectEmailOrPassword(BookingException):
+class IncorrectEmailOrPassword(BaseException):
     status_code = status.HTTP_401_UNAUTHORIZED
     detail = "Incorrect email Or password"
 
 
-class TokenExpired(BookingException):
+class TokenExpired(BaseException):
     status_code = status.HTTP_401_UNAUTHORIZED
     detail = "Token has expired"
 
 
-class TokenAbsent(BookingException):
+class TokenAbsent(BaseException):
     status_code = status.HTTP_401_UNAUTHORIZED
     detail = "Token is absent"
 
 
-class IncorrectTokenFormat(BookingException):
+class IncorrectTokenFormat(BaseException):
     status_code = status.HTTP_401_UNAUTHORIZED
     detail = "Incorrect token format"
 
 
-class UserIsNotPresent(BookingException):
+class UserIsNotPresent(BaseException):
     status_code = status.HTTP_401_UNAUTHORIZED
 
 
-class RoomsFullyBooked(BookingException):
+class RoomsFullyBooked(BaseException):
     status_code = status.HTTP_409_CONFLICT
-    detail = "Не осталось свободных номеров"
+    detail = "No rooms left"
 
 
-class RoomCannotBeBooked(BookingException):
+class RoomCannotBeBooked(BaseException):
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-    detail = "Не удалось забронировать номер ввиду неизвестной ошибки"
+    detail = "Failed to book a room"
 
 
-class CannotInsertData(BookingException):
+class CannotInsertData(BaseException):
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
     detail = "Cannot insert data into table"
 
 
-class CannotAddBooking(CannotInsertData):
+class CannotAddBooking(BaseException):
+    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
     detail = "Cannot add booking"
 
 
-class CannotDeleteData(BookingException):
+class IncorrectDateTo(BaseException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    detail = "Departure date must be at least 1 day later than arrival date"
+
+
+class TooLongPeriod(BaseException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    detail = "Booking cannot exceed 30 days"
+
+
+class CannotDeleteData(BaseException):
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
     detail = "Cannot delete data from table"
 
 
-class CannotDeleteBooking(CannotDeleteData):
+class CannotDeleteBooking(BaseException):
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
     detail = "Cannot delete booking from table"
 
 
-class CannotFetchBookings(BookingException):
+class CannotFetchBookings(BaseException):
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
     detail = "Cannot fetch bookings from table"

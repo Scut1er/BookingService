@@ -4,33 +4,36 @@ from fastapi import APIRouter, Depends
 from pydantic import TypeAdapter
 
 from app.bookings.dao import BookingDAO
-from app.bookings.schemas import SBooking, SGetBooking, SNewBooking
+from app.bookings.schemas import SBooking, SGetBooking, SNewBooking, SAddBookingRequest
 from app.exceptions import RoomCannotBeBooked, CannotDeleteBooking
 from app.users.dependencies import get_current_user
 from app.users.models import Users
 from app.tasks.tasks import send_booking_confirmation_email
 
 router = APIRouter(
-    prefix="/bookings",
+    prefix="/booking",
     tags=["Bookings"],
 )
 
 
-@router.get("")
-async def get_bookings(user: Users = Depends(get_current_user)) -> list[SGetBooking]:
-    result = await BookingDAO.get_all_bookings(user_id=user.id)
-    return result
-
-
 @router.post("")
-async def add_booking(room_id: int, date_from: date, date_to: date,
+async def add_booking(booking_request: SAddBookingRequest,
                       user: Users = Depends(get_current_user)) -> SNewBooking:
-    booking = await BookingDAO.add(user.id, room_id, date_from, date_to)
+    booking = await BookingDAO.add(user.id,
+                                   booking_request.room_id,
+                                   booking_request.date_from,
+                                   booking_request.date_to)
     if not booking:
         raise RoomCannotBeBooked
     booking = TypeAdapter(SNewBooking).validate_python(booking).model_dump()
     send_booking_confirmation_email.delay(booking, user.email)
     return booking
+
+
+@router.get("/my_bookings")
+async def get_bookings(user: Users = Depends(get_current_user)) -> list[SGetBooking]:
+    result = await BookingDAO.get_all_bookings(user_id=user.id)
+    return result
 
 
 @router.delete("/{booking_id}")
@@ -40,3 +43,4 @@ async def delete_booking(booking_id: int, user: Users = Depends(get_current_user
         return await BookingDAO.delete_by_id(booking_id)
     else:
         raise CannotDeleteBooking
+
