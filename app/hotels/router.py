@@ -3,7 +3,7 @@ from datetime import date
 from fastapi import APIRouter
 
 from app.hotels.dao import HotelDAO
-from app.hotels.schemas import SHotel, SGetHotels, SGetHotelsRequest
+from app.hotels.schemas import SGetHotels, SGetHotelsRequest, SHotel
 
 router = APIRouter(
     prefix="/hotels",

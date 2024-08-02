@@ -10,11 +10,9 @@ class UserDAO(BaseDAO):
 
     @classmethod
     async def get_by_id(cls, model_id: int):
-        query = (select(
-            Users.id.label('id'),
-            Users.email.label('email')
-            )
-            .filter_by(id=model_id))
+        query = select(Users.id.label("id"), Users.email.label("email")).filter_by(
+            id=model_id
+        )
         async with async_session_maker() as session:
             result = await session.execute(query)
             return result.mappings().one_or_none()

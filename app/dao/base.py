@@ -1,10 +1,10 @@
 from datetime import date
 
-from sqlalchemy import select, insert, delete, or_, and_, func
+from sqlalchemy import and_, delete, func, insert, or_, select
 
 from app.bookings.models import Bookings
 from app.database import async_session_maker
-from app.exceptions import CannotInsertData, CannotDeleteData
+from app.exceptions import CannotDeleteData, CannotInsertData
 from app.hotels.rooms.models import Rooms
 
 
@@ -14,7 +14,8 @@ class BaseDAO:
     @classmethod
     async def add(cls, **data):
         try:
-            query = insert(cls.model).values(**data).returning(cls.model.__table__.columns)
+            query = (insert(cls.model).values(**data)
+                     .returning(cls.model.__table__.columns))
             async with async_session_maker() as session:
                 insert_data = await session.execute(query)
                 await session.commit()

@@ -8,7 +8,8 @@ class BaseException(HTTPException):
     detail = ""
 
     def __init__(self, detail: Optional[str] = None):
-        super().__init__(status_code=self.status_code, detail=self.detail or self.detail)
+        super().__init__(status_code=self.status_code,
+                         detail=self.detail or self.detail)
 
 
 class UserAlreadyExists(BaseException):

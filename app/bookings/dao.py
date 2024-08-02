@@ -1,13 +1,14 @@
 from datetime import date
 
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.bookings.models import Bookings
 from app.dao.base import BaseDAO
 from app.database import async_session_maker
-from app.exceptions import CannotAddBooking, CannotFetchBookings, RoomsFullyBooked
+from app.exceptions import CannotFetchBookings, RoomsFullyBooked
 from app.hotels.rooms.models import Rooms
+from app.logger import logger
 
 
 class BookingDAO(BaseDAO):
@@ -17,13 +18,20 @@ class BookingDAO(BaseDAO):
     async def add(cls, user_id: int, room_id: int, date_from: date, date_to: date):
         try:
             date_conditions = BaseDAO.create_date_conditions(date_from, date_to)
-            booked_rooms_subquery = BaseDAO.create_booked_rooms_subquery(date_conditions)
+            booked_rooms_subquery = BaseDAO.create_booked_rooms_subquery(
+                date_conditions
+            )
             query = (
                 select(
-                    (Rooms.quantity - func.coalesce(booked_rooms_subquery.c.booked_rooms, 0)).label('available_rooms')
+                    (
+                            Rooms.quantity
+                            - func.coalesce(booked_rooms_subquery.c.booked_rooms, 0)
+                    ).label("available_rooms")
                 )
                 .select_from(Rooms)
-                .outerjoin(booked_rooms_subquery, booked_rooms_subquery.c.room_id == Rooms.id)
+                .outerjoin(
+                    booked_rooms_subquery, booked_rooms_subquery.c.room_id == Rooms.id
+                )
                 .where(Rooms.id == room_id)
             )
             async with async_session_maker() as session:
@@ -36,29 +44,45 @@ class BookingDAO(BaseDAO):
                 get_price = select(Rooms.price).filter_by(id=room_id)
                 price = await session.scalar(get_price)
 
-            return await super().add(user_id=user_id, room_id=room_id, date_from=date_from, date_to=date_to,
-                                     price=price)
+            return await super().add(
+                user_id=user_id,
+                room_id=room_id,
+                date_from=date_from,
+                date_to=date_to,
+                price=price,
+            )
 
-        except SQLAlchemyError or Exception:
-            raise CannotAddBooking
+        except (SQLAlchemyError, Exception) as e:
+            msg = "Exc"
+            if isinstance(e, SQLAlchemyError):
+                msg += " Database: Cannot add booking"
+            elif isinstance(e, Exception):
+                msg += " Unknown: Cannot add booking"
+            extra = {
+                "user_id": user_id,
+                "room_id": room_id,
+                "date_from": date_from,
+                "date_to": date_to,
+            }
+            logger.error(msg, extra=extra, exc_info=True)
 
     @staticmethod
     async def get_all_bookings(user_id: int):
         try:
             query = (
                 select(
-                    Bookings.id.label('id'),
-                    Bookings.room_id.label('room_id'),
-                    Bookings.date_from.label('date_from'),
-                    Bookings.date_to.label('date_to'),
-                    Bookings.user_id.label('user_id'),
-                    Bookings.price.label('price'),
-                    Bookings.total_cost.label('total_cost'),
-                    Bookings.total_days.label('total_days'),
-                    Rooms.image_id.label('image_id'),
-                    Rooms.name.label('name'),
-                    Rooms.description.label('description'),
-                    Rooms.services.label('services')
+                    Bookings.id.label("id"),
+                    Bookings.room_id.label("room_id"),
+                    Bookings.date_from.label("date_from"),
+                    Bookings.date_to.label("date_to"),
+                    Bookings.user_id.label("user_id"),
+                    Bookings.price.label("price"),
+                    Bookings.total_cost.label("total_cost"),
+                    Bookings.total_days.label("total_days"),
+                    Rooms.image_id.label("image_id"),
+                    Rooms.name.label("name"),
+                    Rooms.description.label("description"),
+                    Rooms.services.label("services"),
                 )
                 .join(Rooms, Bookings.room_id == Rooms.id)
                 .where(Bookings.user_id == user_id)

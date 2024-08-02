@@ -1,5 +1,5 @@
-from fastapi import UploadFile, APIRouter
 import aiofiles
+from fastapi import APIRouter, UploadFile
 
 from app.tasks.tasks import process_pic
 

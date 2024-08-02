@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Optional
 
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, model_validator
 
 from app.exceptions import IncorrectDateTo, TooLongPeriod
 
@@ -10,8 +10,6 @@ class SAddBookingRequest(BaseModel):
     room_id: int
     date_from: date
     date_to: date
-
-
 
     @model_validator(mode="before")
     @classmethod

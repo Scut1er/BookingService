@@ -1,6 +1,6 @@
 from datetime import date
 
-from sqlalchemy import or_, and_, select, func
+from sqlalchemy import and_, func, or_, select
 
 from app.bookings.models import Bookings
 from app.dao.base import BaseDAO
@@ -18,19 +18,24 @@ class RoomDAO(BaseDAO):
 
         query = (
             select(
-                Rooms.id.label('id'),
-                Rooms.hotel_id.label('hotel_id'),
-                Rooms.name.label('name'),
-                Rooms.description.label('description'),
-                Rooms.services.label('services'),
-                Rooms.price.label('price'),
-                Rooms.quantity.label('quantity'),
-                Rooms.image_id.label('image_id'),
-                (Rooms.quantity - func.coalesce(booked_rooms_subquery.c.booked_rooms, 0)).label('rooms_left'),
-                (Rooms.price * (date_to - date_from).days).label('total_cost')
+                Rooms.id.label("id"),
+                Rooms.hotel_id.label("hotel_id"),
+                Rooms.name.label("name"),
+                Rooms.description.label("description"),
+                Rooms.services.label("services"),
+                Rooms.price.label("price"),
+                Rooms.quantity.label("quantity"),
+                Rooms.image_id.label("image_id"),
+                (
+                    Rooms.quantity
+                    - func.coalesce(booked_rooms_subquery.c.booked_rooms, 0)
+                ).label("rooms_left"),
+                (Rooms.price * (date_to - date_from).days).label("total_cost"),
             )
             .select_from(Rooms)
-            .outerjoin(booked_rooms_subquery, booked_rooms_subquery.c.room_id == Rooms.id)
+            .outerjoin(
+                booked_rooms_subquery, booked_rooms_subquery.c.room_id == Rooms.id
+            )
             .where(Rooms.hotel_id == hotel_id)
         )
         async with async_session_maker() as session:
