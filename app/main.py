@@ -2,6 +2,7 @@ import time
 from contextlib import asynccontextmanager
 
 import sentry_sdk
+from prometheus_fastapi_instrumentator import Instrumentator
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi_cache import FastAPICache
@@ -22,6 +23,7 @@ from app.logger import logger
 from app.pages.router import router as router_pages
 from app.users.router import router_auth as router_auth
 from app.users.router import router_users as router_users
+from app.prometheus.router import router as router_prometheus
 
 
 @asynccontextmanager
@@ -41,9 +43,15 @@ router_hotels.include_router(router_rooms)
 app.include_router(router_hotels)
 app.include_router(router_pages)
 app.include_router(router_images)
-
+app.include_router(router_prometheus)
 
 app.mount("/static", StaticFiles(directory="app/static"), "static")
+
+instrumentator = Instrumentator(
+    should_group_status_codes=False,
+    excluded_handlers=[".*admin.*", "/metrics"],
+)
+instrumentator.instrument(app).expose(app)
 
 admin = Admin(app, engine, authentication_backend=authentication_backend)
 
@@ -57,14 +65,13 @@ sentry_sdk.init(
     traces_sample_rate=1.0,
 )
 
-
-@app.middleware("http")
+#  middleware для логирования времени выполнения запроса
+"""@app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
     start_time = time.time()
     response = await call_next(request)
     process_time = time.time() - start_time
-    # При подключении Prometheus + Grafana подобный лог не требуется
     logger.info("Request handling time", extra={
         "process_time": round(process_time, 4)
     })
-    return response
+    return response"""
