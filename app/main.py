@@ -23,7 +23,7 @@ from app.logger import logger
 from app.pages.router import router as router_pages
 from app.users.router import router_auth as router_auth
 from app.users.router import router_users as router_users
-from app.prometheus.router import router as router_prometheus
+from app.help.router import router as router_test
 
 
 @asynccontextmanager
@@ -43,7 +43,7 @@ router_hotels.include_router(router_rooms)
 app.include_router(router_hotels)
 app.include_router(router_pages)
 app.include_router(router_images)
-app.include_router(router_prometheus)
+app.include_router(router_test)
 
 app.mount("/static", StaticFiles(directory="app/static"), "static")
 

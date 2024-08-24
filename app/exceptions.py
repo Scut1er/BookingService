@@ -84,3 +84,13 @@ class CannotDeleteBooking(BaseException):
 class CannotFetchBookings(BaseException):
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
     detail = "Cannot fetch bookings from table"
+
+
+class IncorrectFormatFile(BaseException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    detail = "File must be a CSV"
+
+
+class TableNotFound(BaseException):
+    status_code = status.HTTP_404_NOT_FOUND
+    detail = "Table not found in the database"
